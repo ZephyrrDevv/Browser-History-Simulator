@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Browser History Simulator</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #0e0e0f;
+        --surface: #1a1a1c;
+        --surface-2: #242426;
+        --border: #2e2e32;
+        --border-hover: #444448;
+        --text: #f0f0ee;
+        --text-muted: #888884;
+        --text-dim: #555552;
+        --accent: #a3e635;
+        --accent-dim: #1e2e0a;
+        --accent-text: #7ab82a;
+        --danger: #f87171;
+        --danger-dim: #2a0e0e;
+        --mono: "IBM Plex Mono", monospace;
+        --sans: "DM Sans", sans-serif;
+        --radius: 10px;
+        --radius-sm: 6px;
+      }
+
+      body {
+        font-family: var(--sans);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 48px 16px;
+      }
+
+      .wrapper {
+        width: 100%;
+        max-width: 580px;
+      }
+
+      .header {
+        margin-bottom: 32px;
+      }
+
+      .header h1 {
+        font-family: var(--mono);
+        font-size: 18px;
+        font-weight: 500;
+        color: var(--text);
+        letter-spacing: -0.02em;
+      }
+
+      .header p {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .section {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .section:last-child {
+        border-bottom: none;
+      }
+
+      .label {
+        font-family: var(--mono);
+        font-size: 10px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        margin-bottom: 10px;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 8px;
+      }
+
+      #urlInput {
+        flex: 1;
+        height: 40px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        color: var(--text);
+        font-family: var(--mono);
+        font-size: 13px;
+        padding: 0 14px;
+        outline: none;
+        transition: border-color 0.15s;
+      }
+
+      #urlInput::placeholder {
+        color: var(--text-dim);
+      }
+
+      #urlInput:focus {
+        border-color: var(--accent-text);
+      }
+
+      .btn {
+        height: 40px;
+        padding: 0 18px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-muted);
+        font-family: var(--sans);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border-color 0.15s,
+          color 0.15s;
+        white-space: nowrap;
+      }
+
+      .btn:hover {
+        background: var(--surface-2);
+        border-color: var(--border-hover);
+        color: var(--text);
+      }
+
+      .btn-visit {
+        background: var(--accent-dim);
+        border-color: transparent;
+        color: var(--accent);
+      }
+
+      .btn-visit:hover {
+        background: #273d0d;
+        color: var(--accent);
+      }
+
+      .current-page {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 16px;
+        background: var(--surface-2);
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border);
+      }
+
+      .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--accent);
+        flex-shrink: 0;
+      }
+
+      #currentPage {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--text);
+        word-break: break-all;
+      }
+
+      .empty-state {
+        font-size: 13px;
+        color: var(--text-dim);
+        font-family: var(--mono);
+      }
+
+      /* ── THIS IS THE DIV YOUR JS WILL TARGET ── */
+      #historyList {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .history-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        transition: border-color 0.15s;
+      }
+
+      .history-item.active {
+        border-color: var(--border-hover);
+      }
+
+      .history-num {
+        font-family: var(--mono);
+        font-size: 11px;
+        color: var(--text-dim);
+        min-width: 16px;
+      }
+
+      .history-url {
+        font-family: var(--mono);
+        font-size: 13px;
+        color: var(--text-muted);
+        flex: 1;
+        word-break: break-all;
+      }
+
+      .history-item.active .history-url {
+        color: var(--text);
+      }
+
+      .badge {
+        font-size: 10px;
+        font-family: var(--mono);
+        color: var(--accent-text);
+        background: var(--accent-dim);
+        padding: 3px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 24px 12px;
+        }
+        .input-row {
+          flex-wrap: wrap;
+        }
+        #urlInput {
+          width: 100%;
+        }
+        .btn {
+          flex: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="header">
+        <h1>// browser history</h1>
+        <p>Vynrax Industry</p>
+      </div>
+
+      <div class="card">
+        <div class="section">
+          <p class="label">Enter URL</p>
+          <div class="input-row">
+            <input
+              type="text"
+              id="urlInput"
+              placeholder="https://example.com"
+            />
+            <button class="btn btn-visit" id="visitBtn">Visit</button>
+            <button class="btn" id="backBtn">Go back</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="label">Current page</p>
+          <div class="current-page">
+            <div class="dot"></div>
+            <span id="currentPage" class="empty-state"
+              >No page visited yet</span
+            >
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="label">History</p>
+          <div id="historyList">
+            <p class="empty-state">Your history will appear here</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
